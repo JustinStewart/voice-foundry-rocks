@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+
+  app:
+    build: .
+    command: python -m app.main run
+    environment:
+      HOST: '0.0.0.0'
+      PORT: '8080'
+      AWS_ACCESS_KEY_ID: foo
+      AWS_SECRET_ACCESS_KEY: bar
+      AWS_DEFAULT_REGION: us-east-1
+      DDB_ENDPOINT_URL: 'http://dynamodb:8000'
+
+  dynamodb:
+    image: amazon/dynamodb-local
+
+  init-db:
+    build: .
+    command: python -m app.main init-db
+    environment:
+      AWS_ACCESS_KEY_ID: foo
+      AWS_SECRET_ACCESS_KEY: bar
+      AWS_DEFAULT_REGION: us-east-1
+      DDB_ENDPOINT_URL: 'http://dynamodb:8000'
+    depends_on:
+      - dynamodb
+      - app
+
+  tests:
+    build: .
+    command: python tests.py
+    environment:
+      HOST: 'app'
+      PORT: '8080'
+    depends_on:
+      - init-db
