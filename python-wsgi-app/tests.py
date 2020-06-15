@@ -1,5 +1,6 @@
 import json
 import requests
+import  time
 import unittest
 from app import config
 
@@ -7,6 +8,10 @@ URL_PREFIX = f"http://{config.HOST}:{config.PORT}"
 
 
 class Tests(unittest.TestCase):
+
+    def setUp(self):
+        # Sleep to allow database to be initialized...
+        time.sleep(10)
 
     def test(self):
 
@@ -35,6 +40,15 @@ class Tests(unittest.TestCase):
         self.assertEqual(200, r.status_code, "Couldn't retrieve pet listing.")
         filtered = [pet for pet in r.json() if pet['id'] == penny_id]
         self.assertEqual(0, len(filtered), "Penny is still in our pet listing.")
+
+        with open('fixtures/durant.json', 'r') as f:
+            durant = json.load(f)
+
+        requests.post(f"{URL_PREFIX}/pets", json=penny)
+        requests.post(f"{URL_PREFIX}/pets", json=durant)
+        r = requests.get(f"{URL_PREFIX}/pets")
+        self.assertEqual(200, r.status_code, "Couldn't retrieve pet listing.")
+        self.assertEqual(2, len(r.json()))
 
 
 if __name__ == '__main__':
