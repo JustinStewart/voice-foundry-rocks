@@ -1,6 +1,7 @@
 import boto3
 import uuid
 import voluptuous
+from typing import List
 from app import config
 
 ddb = boto3.resource('dynamodb', endpoint_url=config.DDB_ENDPOINT_URL)
@@ -32,7 +33,7 @@ class Pet:
     def delete(self):
         table.delete_item(Key={'id': self.id})
 
-    def dict(self):
+    def dict(self) -> dict:
         return {
             'id': self.id,
             'name': self.name,
@@ -43,15 +44,15 @@ class Pet:
         }
 
     @classmethod
-    def list(cls):
+    def list(cls) -> List['Pet']:
         response = table.scan()
         return [cls.deserialize(item) for item in response['Items']]
 
     @classmethod
-    def get(cls, pet_id):
+    def get(cls, pet_id: str) -> 'Pet':
         response = table.get_item(Key={'id': pet_id})
         return cls.deserialize(response['Item'])
 
     @staticmethod
-    def deserialize(d):
+    def deserialize(d: dict) -> 'Pet':
         return Pet(**_schema(d))
